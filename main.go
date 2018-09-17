@@ -1,6 +1,7 @@
 package main
 
 import (
+    "context"
     "fmt"
     "flag"
     "os"
@@ -10,7 +11,7 @@ import (
 func main() {
 
     flag.Usage = func() {
-        fmt.Fprintf(os.Stderr, "Usage of %s: -nsg1 <addr> -nsg2 <addr> -routerID <this bgp rid> -las <local as> -ras <remote as>\n", os.Args[0])
+        fmt.Fprintf(os.Stderr, "Usage of %s:",os.Args[0]) 
         flag.PrintDefaults()
     }
 
@@ -24,12 +25,11 @@ func main() {
     flag.Parse()
 
     ctx := new(SessionManagerContext)
+    ctx.context = context.Background()
+    ctx.azure = NewAzure("","","","",ctx.context)
     ctx.las = uint32(*las)
     ctx.ras = uint32(*ras)
     ctx.routerId = *routerId
     ctx.server = SetupServer(ctx.las, ctx.routerId, listenPort)
-    SetNsgs(ctx,[]string{*nsg1,*nsg2})
-
-
-    WatchNsgs(ctx)
+    Monitor(ctx,[]string{*nsg1,*nsg2})
 }

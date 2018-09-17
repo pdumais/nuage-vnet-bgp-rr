@@ -12,12 +12,14 @@ import (
 
 
 type SessionManagerContext struct {
+    context context.Context
     nsgs []*nsg
     primaryNsg *nsg
     server *gobgp.BgpServer
     routerId string
     las uint32
     ras uint32
+    azure *Azure
 }
 
 func SetNsgs(ctx *SessionManagerContext, addrs []string) {
@@ -107,18 +109,6 @@ func onNsgsChanged(ctx *SessionManagerContext) {
     if (ctx.primaryNsg != primaryNsg) {
         onPrimaryNsgChanged(primaryNsg, ctx)
         ctx.primaryNsg = primaryNsg
-    }
-}
-
-func onPrimaryNsgChanged(nsg *nsg, ctx *SessionManagerContext) {
-    if (nsg != nil) {
-        fmt.Printf("------> PRIMARY NSG IS NOW %s <------\n",nsg.address)
-        if (nsg.IsActiveSpeaker(ctx)) {
-            fmt.Printf("Will make a change in Azure\n")
-            //TODO: do Azure API call here
-        }
-    } else {
-        fmt.Printf("------> ALL NSGs ARE IN STANDBY <------\n")
     }
 }
 
