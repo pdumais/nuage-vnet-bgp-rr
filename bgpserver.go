@@ -5,6 +5,8 @@ import (
     gobgp "github.com/osrg/gobgp/pkg/server"
     api "github.com/osrg/gobgp/api"
     log "github.com/sirupsen/logrus"
+    "github.com/golang/protobuf/ptypes"
+    "github.com/golang/protobuf/ptypes/any"
 )
 
 func SetupServer(as uint32, routerId string, listenPort int32) (*gobgp.BgpServer){
@@ -20,6 +22,23 @@ func SetupServer(as uint32, routerId string, listenPort int32) (*gobgp.BgpServer
     }); err != nil {
         log.Fatal(err)
     }
+
+    // We add a dummy path with a specific community ID in order to advertise our presence to other HA instances of this app
+    a1, _ := ptypes.MarshalAny(&api.OriginAttribute{ Origin: 0, })
+    a2, _ := ptypes.MarshalAny(&api.CommunitiesAttribute{ Communities: []uint32{242, 242}, })
+    a3, _ := ptypes.MarshalAny(&api.NextHopAttribute{ NextHop: "10.0.0.1", })
+    attrs := []*any.Any{a1,a2,a3}
+    nlri, _ := ptypes.MarshalAny(&api.IPAddressPrefix{
+        Prefix:    routerId,
+        PrefixLen: 32,
+    })
+    s.AddPath(context.Background(), &api.AddPathRequest{
+        Path: &api.Path{
+            Family:    &api.Family{Afi: api.Family_AFI_IP, Safi: api.Family_SAFI_UNICAST},
+            AnyNlri:   nlri,
+            AnyPattrs: attrs,
+        },
+    })
 
     return s
 }
