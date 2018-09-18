@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    "log"
     "sort"
     "context"
     api "github.com/osrg/gobgp/api"
@@ -35,7 +35,7 @@ func SetNsgs(ctx *SessionManagerContext, addrs []string) {
 func onStateChanged(ctx *SessionManagerContext, peer string, state bgp.FSMState) {
     for _, v := range ctx.nsgs {
         if v.address == peer {
-            fmt.Printf("Peer %s state = %v\n",peer,state)
+            log.Printf("Peer %s state = %v\n",peer,state)
             v.sessionConnected = state == bgp.BGP_FSM_ESTABLISHED
             onNsgsChanged(ctx)
         }
@@ -56,7 +56,7 @@ func onRoutesChanged(ctx *SessionManagerContext) {
         v.pathCount = 0
         v.haPeers = []string{ctx.routerId}
         if err != nil {
-            fmt.Printf("Routes for %s can't be found\n",v.address)
+            log.Printf("Routes for %s can't be found\n",v.address)
             continue
         }
 
@@ -85,14 +85,14 @@ func onRoutesChanged(ctx *SessionManagerContext) {
         }
 
         sort.Strings(v.haPeers)
-        fmt.Printf("Routes for %s = %v\n",v.address, v.pathCount)
+        log.Printf("Routes for %s = %v\n",v.address, v.pathCount)
     }
 
     onNsgsChanged(ctx)
 }
 
 func onNsgsChanged(ctx *SessionManagerContext) {
-    fmt.Printf("=================== NSGs ==================\n")
+    log.Printf("=================== NSGs ==================\n")
 
     activeCount := 0
     var primaryNsg *nsg
@@ -119,10 +119,10 @@ func WatchNsgs(ctx *SessionManagerContext) {
         case ev  := <-w.Event():
             switch msg := ev.(type) {
             case *gobgp.WatchEventBestPath:
-                fmt.Printf("Received Best Path Event\n")
+                log.Printf("Received Best Path Event\n")
                 onRoutesChanged(ctx)
             case *gobgp.WatchEventPeerState:
-                fmt.Printf("Received Peer State Event\n")
+                log.Printf("Received Peer State Event\n")
                 onStateChanged(ctx, msg.PeerAddress.String(),msg.State)
             }
         }

@@ -2,16 +2,17 @@ package main
 
 import (
     "context"
-    "fmt"
+    "log"
     "flag"
     "os"
 )
 
 
 func main() {
+    log.SetPrefix("[APP] --> ")
 
     flag.Usage = func() {
-        fmt.Fprintf(os.Stderr, "Usage of %s:",os.Args[0]) 
+        log.Printf("Usage of %s:",os.Args[0]) 
         flag.PrintDefaults()
     }
 

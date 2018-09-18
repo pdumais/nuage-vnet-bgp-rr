@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    "log"
     "context"
     "github.com/Azure/azure-sdk-for-go/services/network/mgmt/2017-09-01/network"
     "github.com/Azure/go-autorest/autorest/azure/auth"
@@ -23,7 +23,8 @@ func NewAzure(subscriptionId string, clientId string, clientSecret string, tenan
     creds := auth.NewClientCredentialsConfig(clientId, clientSecret, tenantId)
     auth, err:= creds.Authorizer()
     if (err != nil) {
-        fmt.Printf("Cannot authenticate with Azure\n")
+        log.Printf("Cannot authenticate with Azure\n")
+        //TODO: terminate app
         return nil
     }
 
@@ -39,13 +40,15 @@ func NewAzure(subscriptionId string, clientId string, clientSecret string, tenan
 }
 
 func (self *Azure) ChangeUplink(address string) {
-    fmt.Printf("Will make a change in Azure\n")
+    log.Printf("Will make a change in Azure\n")
+    //TODO: handle timeout and terminate app
     //TODO
 }
 
 func (self *Azure) GetSubnets(vnet string) ([]*AzureSubnet) {
     var nets []*AzureSubnet
     self.subnetsClient.ListComplete(self.ctx, "", vnet)
+    //TODO: handle timeout and terminate app
     //TODO
     return nets
 }

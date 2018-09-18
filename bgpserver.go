@@ -2,15 +2,17 @@ package main
 
 import (
     "context"
+    "log"
     gobgp "github.com/osrg/gobgp/pkg/server"
     api "github.com/osrg/gobgp/api"
-    log "github.com/sirupsen/logrus"
+    logrus "github.com/sirupsen/logrus"
     "github.com/golang/protobuf/ptypes"
     "github.com/golang/protobuf/ptypes/any"
 )
 
 func SetupServer(as uint32, routerId string, listenPort int32) (*gobgp.BgpServer){
-    log.SetLevel(log.DebugLevel)
+    log.Printf("Starting BGP Client")
+    logrus.SetLevel(logrus.DebugLevel)
     s := gobgp.NewBgpServer()
     go s.Serve()
     if err := s.StartBgp(context.Background(), &api.StartBgpRequest{

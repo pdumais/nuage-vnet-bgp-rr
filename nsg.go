@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    "log"
 )
 
 
@@ -27,10 +27,10 @@ func (self *nsg) IsActiveSpeaker(ctx *SessionManagerContext) (bool){
 }
 
 func (self *nsg) Show(ctx *SessionManagerContext) {
-    fmt.Printf("NSG %s:\n",self.address)
-    fmt.Printf("    Considered Primary:  %v\n",self.active)
-    fmt.Printf("    Num Paths:          %v\n",self.pathCount)
-    fmt.Printf("    BGP Apps:\n")
+    log.Printf("NSG %s:\n",self.address)
+    log.Printf("    Considered Primary:  %v\n",self.active)
+    log.Printf("    Num Paths:          %v\n",self.pathCount)
+    log.Printf("    BGP Apps:\n")
     for i, haPeer := range self.haPeers {
         var attrs []string
         if (i == 0) {
@@ -41,8 +41,8 @@ func (self *nsg) Show(ctx *SessionManagerContext) {
         if (haPeer == ctx.routerId) {
             attrs = append(attrs,"This instance")
         }
-        fmt.Printf("        %s ",haPeer)
-        fmt.Printf("%v",attrs)
-        fmt.Printf("\n")
+        log.Printf("        %s ",haPeer)
+        log.Printf("%v",attrs)
+        log.Printf("\n")
     }
 }

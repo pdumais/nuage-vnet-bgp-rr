@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    "log"
     "time"
 )
 
@@ -15,7 +15,7 @@ func Monitor(ctx *SessionManagerContext, nsgs []string) {
 func processTicker(ctx *SessionManagerContext, ticker *time.Ticker) {
     for range ticker.C {
         updateRIB(ctx)
-        fmt.Printf("ticker \n")
+        log.Printf("ticker \n")
     }
 }
 
@@ -27,12 +27,12 @@ func updateRIB(ctx *SessionManagerContext) {
 
 func onPrimaryNsgChanged(nsg *nsg, ctx *SessionManagerContext) {
     if (nsg != nil) {
-        fmt.Printf("------> PRIMARY NSG IS NOW %s <------\n",nsg.address)
+        log.Printf("------> PRIMARY NSG IS NOW %s <------\n",nsg.address)
         if (nsg.IsActiveSpeaker(ctx)) {
             ctx.azure.ChangeUplink(nsg.address)
             updateRIB(ctx)
         }
     } else {
-        fmt.Printf("------> ALL NSGs ARE IN STANDBY <------\n")
+        log.Printf("------> ALL NSGs ARE IN STANDBY <------\n")
     }
 }
