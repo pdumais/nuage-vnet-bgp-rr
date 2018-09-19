@@ -14,13 +14,26 @@ them to discover each other. But the requirements to make it work are:
 # Building
 Building the sources is not required for running the application. The application is available on Dockerhub. But if
 you want to build it, docker can be used:
+
     - docker run --rm -v "$PWD":/go/src -w /go/src golang:1.11 go get
     - docker run --rm -v "$PWD":/go/src -w /go/src golang:1.11 go build -v -o vnet-bgp-monitor
-
+    - docker build -t nuage/vnet-bgp-monitor:0.1 .
 
 
 # Running
-    docker run 
+    docker run -ti -p 179:179 nuage/vnet-bgp-monitor:0.1 
+        -subscriptionid <Azure subscription ID> 
+        -clientid <Azure client ID> 
+        -password <Azure password>
+        -tenantid <Azure tenant ID> 
+        -rgroup <Azure resource group name>
+        -vnet <Azure vnet name>
+        -routetable <Azure route table name> 
+        -ras <NSG AS>
+        -las <local AS. Must be using in HA configuration>
+    
+    Or to get help:
+    docker run nuage/vnet-bgp-monitor:0.1 --help
 
 # Troubleshooting
 ## Logs
