@@ -16,10 +16,15 @@ type AzureSubnet struct {
 type Azure struct {
     vnetClient network.VirtualNetworksClient
     subnetsClient network.SubnetsClient
+    routesClient network.RoutesClient
     ctx context.Context
+    rgroup string
+    vnet string
+    routetable string
+    nsgs []string
 }
 
-func NewAzure(subscriptionId string, clientId string, clientSecret string, tenantId string, context context.Context) (*Azure){
+func NewAzure(subscriptionId string, clientId string, clientSecret string, tenantId string, rgroup string, vnet string, routetable string, context context.Context, nsgs []string) (*Azure){
     creds := auth.NewClientCredentialsConfig(clientId, clientSecret, tenantId)
     auth, err:= creds.Authorizer()
     if (err != nil) {
@@ -29,26 +34,50 @@ func NewAzure(subscriptionId string, clientId string, clientSecret string, tenan
     }
 
     azure := new(Azure)
+    azure.vnet = vnet
+    azure.rgroup = rgroup
+    azure.routetable = routetable
     azure.ctx = context
     azure.vnetClient = network.NewVirtualNetworksClient(subscriptionId)
     azure.vnetClient.Authorizer = auth
+    azure.nsgs = nsgs
 
     azure.subnetsClient = network.NewSubnetsClient(subscriptionId)
     azure.subnetsClient.Authorizer = auth
+
+    azure.routesClient = network.NewRoutesClient(subscriptionId)
+    azure.routesClient.Authorizer = auth
 
     return azure
 }
 
 func (self *Azure) ChangeUplink(address string) {
     log.Printf("Will make a change in Azure\n")
-    //TODO: handle timeout and terminate app
-    //TODO
+    for list, err := self.routesClient.ListComplete(self.ctx, self.rgroup, self.routetable); list.NotDone(); err = list.Next() {
+        if err != nil {
+            log.Printf("Could not find any routes in Azure\n")
+            return
+        }
+        r := list.Value()
+        for _,nsg := range self.nsgs {
+            if *r.NextHopIPAddress == nsg {
+                log.Printf("Will change next hop for route %s\n",*r.Name)
+                *r.NextHopIPAddress = address
+                self.routesClient.CreateOrUpdate(self.ctx, self.rgroup, self.routetable, *r.Name, r)
+            }
+        }
+    }
 }
 
-func (self *Azure) GetSubnets(vnet string) ([]*AzureSubnet) {
+func (self *Azure) GetSubnets() ([]*AzureSubnet) {
     var nets []*AzureSubnet
-    self.subnetsClient.ListComplete(self.ctx, "", vnet)
-    //TODO: handle timeout and terminate app
-    //TODO
+
+    for list, err := self.subnetsClient.ListComplete(self.ctx, self.rgroup, self.vnet); list.NotDone(); err = list.Next() {
+        if err != nil {
+            log.Printf("Could not find any subnets in Azure\n")
+            return nets
+        }
+        log.Printf("net: %v\n",*list.Value().Name)
+    }
     return nets
 }

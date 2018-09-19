@@ -9,6 +9,7 @@ func Monitor(ctx *SessionManagerContext, nsgs []string) {
     ticker1 := time.NewTicker(30*time.Second)
     go processTicker(ctx,ticker1)
     SetNsgs(ctx,nsgs)
+    updateRIB(ctx)
     WatchNsgs(ctx)
 }
 
@@ -20,7 +21,7 @@ func processTicker(ctx *SessionManagerContext, ticker *time.Ticker) {
 }
 
 func updateRIB(ctx *SessionManagerContext) {
-    ctx.azure.GetSubnets("")
+    ctx.azure.GetSubnets()
     //TODO: remove entries from rib if they are not in this list (take nexthop into consideration)
     //TODO: add entries in rib if they are not already in it (take nexthop into consideration)
 }
