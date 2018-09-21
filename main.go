@@ -29,7 +29,6 @@ func main() {
     tenantId := flag.String("tenantid","","Azure tenant ID")
     rgroup := flag.String("rgroup","","Azure resource group name")
     vnet := flag.String("vnet","","Azure vnet name")
-    routetable := flag.String("routetable","","Azure route table name")
     listenPort := int32(179)
 
     flag.Parse()
@@ -37,7 +36,7 @@ func main() {
     nsgs := []string{*nsg1,*nsg2}
     ctx := new(SessionManagerContext)
     ctx.context = context.Background()
-    ctx.azure = NewAzure(*subscriptionId,*clientId,*password,*tenantId,*rgroup,*vnet,*routetable,ctx.context, nsgs)
+    ctx.azure = NewAzure(*subscriptionId,*clientId,*password,*tenantId,*rgroup,*vnet,ctx.context, nsgs)
 
     ctx.las = uint32(*las)
     ctx.ras = uint32(*ras)

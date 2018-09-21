@@ -61,11 +61,6 @@ func updateRIB(ctx *SessionManagerContext) {
     }
 
     for _, sub := range ctx.azure.GetSubnets() {
-        // Don't advertise the NSG's lan. The NSG already knows about it
-        if sub.prefix == nsg.lanprefix {
-            continue
-        }
-
         ipnet := strings.Split(sub.prefix,"/")
         net := ipnet[0]
         s,_ := strconv.Atoi(ipnet[1])

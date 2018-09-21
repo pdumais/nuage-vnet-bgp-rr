@@ -21,7 +21,7 @@ you want to build it, docker can be used:
 
 
 # Running
-    docker run -ti -p 179:179 nuage/vnet-bgp-monitor:0.1 
+    docker run -d -p 179:179 nuage/vnet-bgp-monitor:0.3 
         -subscriptionid <Azure subscription ID> 
         -clientid <Azure client ID> 
         -password <Azure password>
