@@ -12,6 +12,8 @@ func main() {
     log.SetPrefix("[APP] --> ")
 
     flag.Usage = func() {
+
+
         log.Printf("Usage of %s:",os.Args[0])
         flag.PrintDefaults()
     }

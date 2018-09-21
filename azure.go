@@ -9,8 +9,9 @@ import (
 )
 
 type AzureSubnet struct {
-    address string
+    prefix string
     subnet uint32
+    name string
 }
 
 type Azure struct {
@@ -77,7 +78,11 @@ func (self *Azure) GetSubnets() ([]*AzureSubnet) {
             log.Printf("Could not find any subnets in Azure\n")
             return nets
         }
-        log.Printf("net: %v\n",*list.Value().Name)
+
+        as := new(AzureSubnet)
+        as.prefix = *list.Value().SubnetPropertiesFormat.AddressPrefix
+        as.name = *list.Value().Name
+        nets = append(nets,as)
     }
     return nets
 }

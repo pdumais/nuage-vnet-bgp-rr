@@ -13,7 +13,7 @@ import (
 
 type SessionManagerContext struct {
     context context.Context
-    nsgs []*nsg
+    nsgs map[string]*nsg
     primaryNsg *nsg
     server *gobgp.BgpServer
     routerId string
@@ -23,11 +23,12 @@ type SessionManagerContext struct {
 }
 
 func SetNsgs(ctx *SessionManagerContext, addrs []string) {
+    ctx.nsgs = make(map[string]*nsg)
     for _,s := range addrs {
         n := new(nsg)
         n.address=s
         n.sessionConnected=false
-        ctx.nsgs = append(ctx.nsgs,n)
+        ctx.nsgs[s] = n
         AddPeer(ctx.server, s, ctx.ras);
     }
 }

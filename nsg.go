@@ -7,6 +7,8 @@ import (
 
 type nsg struct {
     address string
+    gateway string
+    lanprefix string
     active bool
     sessionConnected bool
     pathCount uint64
