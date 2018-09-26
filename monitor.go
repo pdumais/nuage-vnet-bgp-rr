@@ -60,31 +60,83 @@ func updateRIB(ctx *SessionManagerContext) {
         return
     }
 
-    for _, sub := range ctx.azure.GetSubnets() {
+    // Get the list of currently advertised prefixes so we can build a delta
+    subnetsOut := make(map[string]string)
+    rib,_ := ctx.server.ListPath(ctx.context,&api.ListPathRequest{
+        Type:   api.Resource_ADJ_OUT,
+        Family: &api.Family{
+            Afi:  api.Family_AFI_IP,
+            Safi: api.Family_SAFI_UNICAST,
+        },
+        Name:   nsg.address,
+    })
+    for _,r := range rib {
+        for _, p := range r.Paths {
+            var nlri api.IPAddressPrefix
+            ptypes.UnmarshalAny(p.AnyNlri,&nlri)
+            var gw string
+            ignore := false
+            for _, attr := range p.AnyPattrs {
+                var value ptypes.DynamicAny
+                ptypes.UnmarshalAny(attr, &value)
+                switch t :=  value.Message.(type) {
+                    case *api.CommunitiesAttribute:
+                        ignore = true
+                    case *api.NextHopAttribute:
+                        gw = t.NextHop
+                }
+            }
+            if (!ignore) {
+                subnetsOut[nlri.Prefix+"/"+strconv.Itoa(int(nlri.PrefixLen))] = gw
+            }
+        }
+    }
+
+    // Get the subnets from Azure and advertise them
+    azureSubnets := ctx.azure.GetSubnets()
+    for _, sub := range azureSubnets {
         ipnet := strings.Split(sub.prefix,"/")
         net := ipnet[0]
         s,_ := strconv.Atoi(ipnet[1])
 
-        nlri, _ := ptypes.MarshalAny(&api.IPAddressPrefix{
-            Prefix:    net,
-            PrefixLen: uint32(s),
-        })
+        found := false
+        for prefix,gw := range subnetsOut {
+            if (prefix == sub.prefix && gw == nsg.gateway) {
+                found = true
+                break
+            }
+        }
+
+        if (!found) {
+            nlri, _ := ptypes.MarshalAny(&api.IPAddressPrefix{
+                Prefix:    net,
+                PrefixLen: uint32(s),
+            })
 
 
-        a1, _ := ptypes.MarshalAny(&api.OriginAttribute{ Origin: 0, })
-        a2, _ := ptypes.MarshalAny(&api.NextHopAttribute{ NextHop: nsg.gateway, })
-        attrs := []*any.Any{a1, a2}
+            a1, _ := ptypes.MarshalAny(&api.OriginAttribute{ Origin: 0, })
+            a2, _ := ptypes.MarshalAny(&api.NextHopAttribute{ NextHop: nsg.gateway, })
+            attrs := []*any.Any{a1, a2}
 
-        ctx.server.AddPath(ctx.context, &api.AddPathRequest{
-            Path: &api.Path{
-                Family:    &api.Family{Afi: api.Family_AFI_IP, Safi: api.Family_SAFI_UNICAST},
-                AnyNlri:   nlri,
-                AnyPattrs: attrs,
-            },
-        })
+            ctx.server.AddPath(ctx.context, &api.AddPathRequest{
+                Path: &api.Path{
+                    Family:    &api.Family{Afi: api.Family_AFI_IP, Safi: api.Family_SAFI_UNICAST},
+                    AnyNlri:   nlri,
+                    AnyPattrs: attrs,
+                },
+            })
+        }
     }
-    //TODO: remove entries from rib if they are not in this list (take nexthop into consideration)
-    //TODO: add entries in rib if they are not already in it (take nexthop into consideration)
+
+    // Now for all subnets that were in rib but not in azure anymore, remove them from rib
+    // TODO !!
+    /*
+    for prefix,gw := range subnetsOut {
+        found := false
+        for _, sub := range azureSubnets {
+            if (sub.prefix == prefix && 
+        }
+    }*/
 }
 
 func onPrimaryNsgChanged(nsg *nsg, ctx *SessionManagerContext) {

@@ -42,5 +42,6 @@ func main() {
     ctx.ras = uint32(*ras)
     ctx.routerId = *routerId
     ctx.server = SetupServer(ctx.las, ctx.routerId, listenPort)
+    StartStats(ctx)
     Monitor(ctx,nsgs)
 }
